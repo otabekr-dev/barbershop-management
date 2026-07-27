@@ -10,3 +10,5 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.CUSTOMER)
 
+    def __str__(self):
+        return f'{self.id}.{self.username}'
