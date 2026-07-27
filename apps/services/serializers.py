@@ -10,4 +10,11 @@ class ServiceSerializer(serializers.ModelSerializer):
             'id', 'name',
             'price', 'duration'
         ]
-        
+
+
+    def validate_name(self, value):
+        data = value.strip().lower()
+        service = Service.objects.filter(name__iexact=data)
+        if service:
+            raise serializers.ValidationError('Mavjud xizmat')    
+        return value
