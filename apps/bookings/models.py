@@ -17,3 +17,7 @@ class Booking(models.Model):
     start_time = models.TimeField()
     status = models.CharField(max_length=25, choices=StatusChoices.choices, default=StatusChoices.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return f'{self.id}.{self.customer}'
