@@ -9,7 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import BookingStatusSerializer, BookingSerializer
 from apps.services.permissions import IsBarberOrAdmin
 from .models import Booking
-
+from .permissions import IsBookingOwner
 
 WORK_START = "08:00"
 WORK_END = "18:00"
@@ -82,3 +82,14 @@ class AvailableSlotsView(APIView):
 
             current += timedelta(minutes=30)
         return Response(available_slots, status=status.HTTP_200_OK)                    
+
+
+class CancelAppointmentView(UpdateAPIView):
+    permission_classes = [IsBookingOwner]
+    authentication_classes = [JWTAuthentication]
+    serializer_class = BookingStatusSerializer
+    queryset = Booking.objects.all()
+
+
+    def perform_update(self, serializer):
+            serializer.save(status='CANCELLED')
