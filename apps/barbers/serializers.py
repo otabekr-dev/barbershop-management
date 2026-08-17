@@ -4,6 +4,7 @@ from apps.services.models import Service
 
 class BarberSerializer(serializers.ModelSerializer):
     services = serializers.PrimaryKeyRelatedField(read_only=True, many=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Barber
