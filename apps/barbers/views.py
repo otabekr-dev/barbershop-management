@@ -4,7 +4,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Barber
 from .serializers import BarberSerializer, BarberAvailabilitySerializer, BarberServiceAssignSerializer
-from .permissions import IsOwnerBarberOrAdmin, IsAdminRole
+from .permissions import IsOwnerBarberOrAdmin
 from apps.services.permissions import IsBarberOrAdmin
 
 
@@ -13,6 +13,10 @@ class BarberView(ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
     queryset = Barber.objects.all()
     serializer_class = BarberSerializer
+
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user) 
 
 class BarberDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerBarberOrAdmin]
@@ -27,7 +31,7 @@ class BarberAvailabilityView(UpdateAPIView):
     serializer_class = BarberAvailabilitySerializer
 
 class BarberAssignServiceView(UpdateAPIView):
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsOwnerBarberOrAdmin]
     authentication_classes = [JWTAuthentication]
     queryset = Barber.objects.all()
     serializer_class = BarberServiceAssignSerializer
