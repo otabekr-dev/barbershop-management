@@ -9,7 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import BookingStatusSerializer, BookingSerializer
 from apps.services.permissions import IsBarberOrAdmin
 from .models import Booking
-from .permissions import IsBookingOwner
+from .permissions import IsBookingOwner, IsBookingParticipantOrAdmin, IsAssignedBarberOrAdmin
 
 WORK_START = "08:00"
 WORK_END = "18:00"
@@ -36,13 +36,13 @@ class BookingListCreateView(ListCreateAPIView):
 
 
 class BookingDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsBookingParticipantOrAdmin]
     authentication_classes = [JWTAuthentication]
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer 
 
 class BookingStatusUpdateView(UpdateAPIView):
-    permission_classes = [IsBarberOrAdmin]
+    permission_classes = [IsAssignedBarberOrAdmin]
     authentication_classes = [JWTAuthentication]
     queryset = Booking.objects.all()
     serializer_class = BookingStatusSerializer           

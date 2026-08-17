@@ -8,3 +8,23 @@ class IsBookingOwner(BasePermission):
             return True
 
         return False
+
+class IsBookingParticipantOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if obj.customer == request.user:
+            return True
+        if obj.barber.user == request.user:
+            return True
+        if request.user.role == "ADMIN":
+            return True
+
+        return False
+
+class IsAssignedBarberOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if obj.barber.user == request.user:
+            return True
+        if request.user.role == "ADMIN":
+            return True
+
+        return False
