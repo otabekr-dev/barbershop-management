@@ -143,3 +143,12 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+CACHES = {
+    "default": {
+        "BACKEND":'django.core.cache.backends.locmem.LocMemCache',
+        "LOCATION":"barbershop-cache",
+    }
+}
+
+CACHE_TIMEOUT = 60
