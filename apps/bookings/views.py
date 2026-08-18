@@ -10,6 +10,8 @@ from .serializers import BookingStatusSerializer, BookingSerializer
 from apps.services.permissions import IsBarberOrAdmin
 from .models import Booking
 from .permissions import IsBookingOwner, IsBookingParticipantOrAdmin, IsAssignedBarberOrAdmin
+from django.core.cache import cache
+from django.conf import settings
 
 WORK_START = "08:00"
 WORK_END = "18:00"
@@ -22,7 +24,12 @@ class BookingListCreateView(ListCreateAPIView):
     serializer_class = BookingSerializer
 
     def perform_create(self, serializer):
-        serializer.save(customer=self.request.user)
+        booking = serializer.save(customer=self.request.user)
+
+        cache_key = f"available_slots:barber{booking.barber.id}:{booking.date}"
+
+        cache.delete(cache_key)
+
 
     def get_queryset(self):
         user = self.request.user
@@ -56,6 +63,14 @@ class AvailableSlotsView(APIView):
     def get(self, request: Request, pk:int) -> Response:
         date = datetime.strptime(request.query_params.get('date'), "%Y-%m-%d").date()
 
+        cache_key = f"available_slots:barber:{pk}:{date}"
+
+        cached_slots = cache.get("cache_key")
+
+        if cached_slots is not None:
+            return Response(cached_slots, status=status.HTTP_200_OK)
+        
+
         available_slots = []
 
         work_start = datetime.strptime(WORK_START, "%H:%M").time()
@@ -81,6 +96,9 @@ class AvailableSlotsView(APIView):
                 available_slots.append(current.strftime("%H:%M"))
 
             current += timedelta(minutes=30)
+
+        cache.set(cache_key, available_slots, settings.CACHE_TIMEOUT)
+            
         return Response(available_slots, status=status.HTTP_200_OK)                    
 
 
@@ -92,4 +110,9 @@ class CancelAppointmentView(UpdateAPIView):
 
 
     def perform_update(self, serializer):
-            serializer.save(status='CANCELLED')
+        booking = self.get_object()
+
+        serializer.save(status='CANCELLED')
+
+        cache_key = f"available_slots:barber:{booking.barber.id}:{booking.date}"
+        cache.delete(cache_key)
