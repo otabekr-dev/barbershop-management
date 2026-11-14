@@ -5,8 +5,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django.contrib.auth import get_user_model
+from rest_framework.generics import CreateAPIView
+from core.permissions import IsAdmin
 
-from .serializers import RegisterSerializer, MeSerializer
+from .serializers import RegisterSerializer, MeSerializer, StaffCreateSerializer
 from drf_spectacular.utils import extend_schema
 
 User = get_user_model()
@@ -28,4 +30,8 @@ class RegisterView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response('User created', status=201)
-        
+
+@extend_schema(request=StaffCreateSerializer)
+class StaffCreateView(CreateAPIView):
+    serializer_class = StaffCreateSerializer
+    permission_classes = [IsAdmin]

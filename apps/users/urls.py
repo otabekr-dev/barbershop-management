@@ -1,4 +1,4 @@
-from .views import MeView, RegisterView
+from .views import MeView, RegisterView, StaffCreateView
 from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -6,7 +6,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('staff/', StaffCreateView.as_view(), name='staff-create'),
+    path('auth/login/', TokenObtainPairView.as_view(), name='login'),
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/me/', MeView.as_view(), name='me-view'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
