@@ -20,7 +20,7 @@ class MeView(RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-
+@extend_schema(request=RegisterSerializer)
 class RegisterView(APIView):
 
     def post(self, request: Request) -> Response:

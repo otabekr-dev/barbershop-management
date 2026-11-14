@@ -21,3 +21,9 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.id}.{self.phone_number}'
