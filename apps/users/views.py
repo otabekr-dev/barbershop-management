@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.generics import CreateAPIView
 from core.permissions import IsAdmin
 
-from .serializers import RegisterSerializer, MeSerializer, StaffCreateSerializer
+from .serializers import RegisterSerializer, MeSerializer, ManagerCreateSerializer
 from drf_spectacular.utils import extend_schema
 
 User = get_user_model()
@@ -31,7 +31,7 @@ class RegisterView(APIView):
             serializer.save()
             return Response('User created', status=201)
 
-@extend_schema(request=StaffCreateSerializer)
+@extend_schema(request=ManagerCreateSerializer)
 class StaffCreateView(CreateAPIView):
-    serializer_class = StaffCreateSerializer
+    serializer_class = ManagerCreateSerializer
     permission_classes = [IsAdmin]

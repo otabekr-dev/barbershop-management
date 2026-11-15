@@ -35,21 +35,15 @@ class MeSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'first_name', 'last_name', 'phone_number', 'role']
 
-class StaffCreateSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(
-        choices = [
-            (User.Roles.MANAGER, 'Manager'),
-            (User.Roles.BARBER, 'Barber')
-        ]
-    )
+class ManagerCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'phone_number', 'first_name','last_name','password','role']
+        fields = ['id', 'phone_number', 'first_name','last_name','password',]
         extra_kwargs = {'password':{'write_only':True}}
 
     def create(self, validated_data):
         password = validated_data.pop('password')
 
-        return User.objects.create_user(password=password, **validated_data)
+        return User.objects.create_user(password=password,role=User.Roles.MANAGER ,**validated_data)
     
