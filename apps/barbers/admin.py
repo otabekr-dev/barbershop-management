@@ -1,3 +1,3 @@
 from django.contrib import admin
-
-# Register your models here.
+from .models import BarberService,Barber,TimeOff,WorkSchedule
+admin.site.register([Barber, BarberService, TimeOff, WorkSchedule])
