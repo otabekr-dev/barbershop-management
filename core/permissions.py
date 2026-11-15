@@ -34,3 +34,10 @@ class IsBranchManagerOrAdmin(BasePermission):
             return True
 
         return obj.manager == request.user
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated and request.user.role == User.Roles.ADMIN:
+            return True
+        
+        return request.method in SAFE_METHODS

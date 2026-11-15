@@ -2,7 +2,6 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Branch
 from .serializers import BranchSerializer
 from core.permissions import IsAdmin, IsBranchManagerOrAdmin
-from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 
 

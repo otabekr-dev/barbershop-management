@@ -37,4 +37,3 @@ class BranchSerializer(serializers.ModelSerializer):
                 )
 
         return attrs
-    
