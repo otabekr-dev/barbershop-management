@@ -110,7 +110,6 @@ class BarberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
-
 class BarberServiceSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -133,6 +132,21 @@ class BarberServiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Bu xizmat faol emas')
         return value
 
+    def validate_barber(self, value):
+        user = self.context['request'].user
+
+        if user.role == User.Roles.ADMIN:
+            return value
+
+        if user.role == User.Roles.MANAGER:
+            if value.branch.manager_id != user.id:
+                raise serializers.ValidationError(
+                    'Siz faqat o\'z filialingiz sartaroshlari uchun yoza olasiz'
+                )
+            return value
+
+        raise serializers.ValidationError('Sizda bu amal uchun ruxsat yo\'q')
+    
 
 class WorkScheduleSerializer(serializers.ModelSerializer):
 
@@ -176,6 +190,21 @@ class WorkScheduleSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def validate_barber(self, value):
+        user = self.context['request'].user
+
+        if user.role == User.Roles.ADMIN:
+            return value
+
+        if user.role == User.Roles.MANAGER:
+            if value.branch.manager_id != user.id:
+                raise serializers.ValidationError(
+                    'Siz faqat o\'z filialingiz sartaroshlari uchun yoza olasiz'
+                )
+            return value
+
+        raise serializers.ValidationError('Sizda bu amal uchun ruxsat yo\'q')
+
 
 class TimeOffSerializer(serializers.ModelSerializer):
 
@@ -198,3 +227,18 @@ class TimeOffSerializer(serializers.ModelSerializer):
                 )
 
         return attrs
+
+    def validate_barber(self, value):
+        user = self.context['request'].user
+
+        if user.role == User.Roles.ADMIN:
+            return value
+
+        if user.role == User.Roles.MANAGER:
+            if value.branch.manager_id != user.id:
+                raise serializers.ValidationError(
+                    'Siz faqat o\'z filialingiz sartaroshlari uchun yoza olasiz'
+                )
+            return value
+
+        raise serializers.ValidationError('Sizda bu amal uchun ruxsat yo\'q')
