@@ -7,20 +7,10 @@ from rest_framework import serializers
 from apps.branch.models import Branch
 from apps.service.models import Service
 from core.validators import validate_uzb_numbers
-
+from core.utils import generate_password
 from .models import Barber, BarberService, TimeOff, WorkSchedule
 
 User = get_user_model()
-
-PASSWORD_ALPHABET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-PASSWORD_LENGTH = 10
-
-
-def generate_password():
-    password = ''
-    for _ in range(PASSWORD_LENGTH):
-        password += secrets.choice(PASSWORD_ALPHABET)
-    return password
 
 
 def get_value(serializer, attrs, name):
@@ -135,6 +125,9 @@ class BarberServiceSerializer(serializers.ModelSerializer):
     def validate_barber(self, value):
         user = self.context['request'].user
 
+        if not value.is_active:
+            raise serializers.ValidationError('Faol bo\'lmagan sartaroshga xizmat biriktirib bo\'lmaydi')
+
         if user.role == User.Roles.ADMIN:
             return value
 
@@ -193,6 +186,10 @@ class WorkScheduleSerializer(serializers.ModelSerializer):
     def validate_barber(self, value):
         user = self.context['request'].user
 
+        if not value.is_active:
+            raise serializers.ValidationError('Faol bo\'lmagan sartaroshga ish vaqti belgilab bo\'lmaydi')
+        
+
         if user.role == User.Roles.ADMIN:
             return value
 
@@ -230,6 +227,10 @@ class TimeOffSerializer(serializers.ModelSerializer):
 
     def validate_barber(self, value):
         user = self.context['request'].user
+
+        if not value.is_active:
+            raise serializers.ValidationError('Faol bo\'lmagan sartaroshga ta\'til belgilab bo\'lmaydi')
+
 
         if user.role == User.Roles.ADMIN:
             return value

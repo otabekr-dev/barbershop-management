@@ -5,6 +5,7 @@ from .serializers import BarberSerializer, BarberRegisterSerializer, WorkSchedul
 from core.permissions import IsAdminOrManagerOrReadOnly, IsAdminOrManager, IsAdmin, IsManager, IsBarber
 from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
+from django.db import transaction
 
 User = get_user_model()
 
@@ -16,8 +17,8 @@ class BarberRegisterView(CreateAPIView):
 
 class BarberViewSet(ModelViewSet):
     serializer_class = BarberSerializer
-    permission_classes = [IsAdminOrManager]
-    http_method_names = ['get', 'patch', 'put', 'head', 'options', 'destroy']
+    permission_classes = [IsAdminOrManagerOrReadOnly]
+    http_method_names = ['get', 'patch', 'put', 'head', 'options', 'delete']
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -33,11 +34,28 @@ class BarberViewSet(ModelViewSet):
         if user.role == User.Roles.MANAGER:
             return queryset.filter(branch__manager=user)
 
+        if user.role == User.Roles.BARBER:
+            return queryset.filter(user=user)
+
         return queryset.filter(is_active=True)
 
     def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
+        with transaction.atomic():
+            instance.is_active = False
+            instance.user.is_active = False
+            instance.save()
+            instance.user.save()
+
+    def perform_update(self, serializer):
+        is_active = serializer.validated_data.get('is_active')
+
+        with transaction.atomic():
+            barber = serializer.save()
+
+            if is_active is not None:
+                barber.user.is_active = is_active
+                barber.user.save()
+
 
 class BarberServiceViewSet(ModelViewSet):
     serializer_class = BarberServiceSerializer

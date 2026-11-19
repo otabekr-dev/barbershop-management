@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from core.utils import generate_password
 
 User = get_user_model()
 
@@ -39,11 +40,21 @@ class ManagerCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'phone_number', 'first_name','last_name','password',]
-        extra_kwargs = {'password':{'write_only':True}}
+        fields = ['id', 'phone_number', 'first_name','last_name']
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = generate_password()
 
-        return User.objects.create_user(password=password,role=User.Roles.MANAGER ,**validated_data)
-    
+        user = User.objects.create_user(password=password,role=User.Roles.MANAGER ,**validated_data)
+
+        user.generated_password = password
+        return user
+
+    def to_representation(self, instance):
+        return {
+            'id':instance.pk,
+            'first_name':instance.first_name,
+            'last_name':instance.last_name,
+            'phone_number':instance.phone_number,
+            'password':getattr(instance, 'generated_password', None),
+        }
