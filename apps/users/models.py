@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
     username = None
     role = models.CharField(choices=Roles.choices, default=Roles.CUSTOMER, max_length=10)
     email = models.EmailField(blank=True, null=True)
+    telegram_id = models.PositiveBigIntegerField(null=True, blank=True, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

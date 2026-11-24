@@ -1,5 +1,9 @@
+import secrets
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.contrib.auth import get_user_model
+from decouple import config
+
+TELEGRAM_BOT_SECRET=config('TELEGRAM_BOT_SECRET')
 
 User = get_user_model()
 
@@ -51,3 +55,13 @@ class IsAdminOrManagerOrReadOnly(BasePermission):
             return True
 
         return request.method in SAFE_METHODS
+
+class IsTelegramBot(BasePermission):
+
+    def has_permission(self, request, view):
+        provided_secret = request.headers.get('X-BOT-SECRET', '')
+
+        return secrets.compare_digest(
+            provided_secret,
+            TELEGRAM_BOT_SECRET
+        )

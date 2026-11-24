@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'apps.branch',
     'apps.service',
     'apps.users',
+    'apps.notifications',
 
     'rest_framework',
     'rest_framework_simplejwt',
