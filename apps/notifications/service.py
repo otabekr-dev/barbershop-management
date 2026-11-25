@@ -60,6 +60,7 @@ def create_telegram_link_token(user):
         'expires_at': expires_at
     }
 
+
 @transaction.atomic
 def verify_telegram_link_token(raw_token, telegram_id):
     token_hash = hashlib.sha256(
@@ -75,10 +76,13 @@ def verify_telegram_link_token(raw_token, telegram_id):
     )
 
     if not link_token:
-        raise ValidationError('Token xato yoki mavjud emas')
+        raise ValidationError('Token noto\'g\'ri yoki mavjud emas.')
 
-    if not link_token.used_at <= timezone.now():
-        raise ValidationError('Token amal qilish muddati tugagan')
+    if link_token.used_at is not None:
+        raise ValidationError('Bu token allaqachon ishlatilgan.')
+
+    if link_token.expires_at <= timezone.now():
+        raise ValidationError('Tokenning amal qilish muddati tugagan.')
 
     user = link_token.user
 
@@ -87,14 +91,18 @@ def verify_telegram_link_token(raw_token, telegram_id):
         User.Roles.MANAGER,
         User.Roles.BARBER
     ]:
-        raise PermissionDenied('Bu akkaunt Telegram bilan bog\'lana olmaydi.')
+        raise PermissionDenied(
+            'Bu akkauntni Telegram bilan bog\'lashga ruxsat yo\'q.'
+        )
 
     if user.telegram_id is not None:
-        raise ValidationError('Telegram akkaunti allaqachon bog\'langan.')
+        raise ValidationError(
+            'Telegram akkauntingiz allaqachon bog\'langan.'
+        )
 
     if User.objects.filter(telegram_id=telegram_id).exists():
         raise ValidationError(
-            'Bu telegram akkaunt boshqa foydalanuvchiga bog\'langan'
+            'Bu Telegram akkaunti boshqa foydalanuvchiga bog\'langan.'
         )
 
     user.telegram_id = telegram_id

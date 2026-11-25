@@ -30,8 +30,11 @@ class TelegramVerifyView(APIView):
         serializer = TelegramLinkVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        token = serializer.validated_data['token']
+        telegram_id = serializer.validated_data['telegram_id']
+
         user = verify_telegram_link_token(
-            **serializer.validated_data
+            raw_token=token, telegram_id=telegram_id
         )
 
         return Response(
