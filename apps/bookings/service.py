@@ -6,6 +6,8 @@ from decouple import config
 from django.db import transaction, IntegrityError
 from rest_framework.exceptions import ValidationError
 
+from apps.notifications.service import create_notification
+
 
 STEP_MINUTES = config('STEP_MINUTES', cast=int)
 
@@ -110,6 +112,8 @@ def create_booking(barber, service, start_at, customer=None, guest_name='', gues
                 note=note,
                 status=Booking.StatusChoice.PENDING
             )
+
+            create_notification(booking=booking)
     except IntegrityError:
         raise ValidationError('Bu vaqt band bo\'lib qoldi, boshqa vaqt tanlang')
     

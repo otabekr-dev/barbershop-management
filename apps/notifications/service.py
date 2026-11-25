@@ -7,8 +7,9 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from decouple import config
+from django.utils import timezone
 
-from .models import TelegramLinkToken
+from .models import TelegramLinkToken, Notification
 
 User = get_user_model()
 
@@ -112,3 +113,48 @@ def verify_telegram_link_token(raw_token, telegram_id):
     link_token.save(update_fields=['used_at'])
 
     return user
+
+def create_notification(booking):
+    recipient = booking.barber.user
+
+    notification = Notification.objects.create(
+        recipient=recipient,
+        booking=booking,
+        notification_type=Notification.NotificationType.BOOKING_CREATED,
+        scheduled_for=timezone.now()
+    )
+
+    return notification
+
+
+def build_booking_message(booking):
+    if booking.customer:
+        customer = booking.customer.first_name
+        phone_number = booking.customer.phone_number
+    else:
+        customer = booking.guest_name
+        phone_number = booking.guest_phone
+
+    service = booking.service.name
+
+    time = timezone.localtime(booking.start_at).strftime('%Y-%m-%d %H:%M')
+
+    note = booking.note
+
+    if note:
+        message = (
+            f'Mijoz: {customer}\n'
+            f'Telefon: {phone_number}\n'
+            f'Xizmat: {service}\n'
+            f'Vaqt: {time}\n'
+            f'Izoh: {note}'
+        )
+    else:
+        message = (
+            f'Mijoz: {customer}\n'
+            f'Telefon: {phone_number}\n'
+            f'Xizmat: {service}\n'
+            f'Vaqt: {time}'
+        )
+
+    return message
