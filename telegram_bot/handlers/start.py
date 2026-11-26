@@ -10,14 +10,17 @@ router = Router()
 BOT_SECRET = config('TELEGRAM_BOT_SECRET')
 VERIFY_URL = config('DJANGO_VERIFY_URL')
 
+
 @router.message(CommandStart())
-async def start_handler(message:Message, command: CommandObject):
+async def start_handler(message: Message, command: CommandObject):
     token = command.args
 
+    # Oddiy /start
     if not token:
         await message.answer(
-            'Assalomu Alaykum !, Barbershop botimizga xush kelibsiz!'            
+            'Assalomu Alaykum! Barbershop botimizga xush kelibsiz!'
         )
+        return
 
     telegram_id = message.from_user.id
 
@@ -25,16 +28,15 @@ async def start_handler(message:Message, command: CommandObject):
         await message.answer(
             'Bot konfiguratsiyasida xatolik yuz berdi'
         )
-
         return
 
     headers = {
-        "X-BOT-SECRET":BOT_SECRET
+        "X-BOT-SECRET": BOT_SECRET
     }
 
     payload = {
-        'token':token,
-        'telegram_id':telegram_id
+        'token': token,
+        'telegram_id': telegram_id
     }
 
     try:
@@ -46,23 +48,29 @@ async def start_handler(message:Message, command: CommandObject):
                 timeout=aiohttp.ClientTimeout(total=10)
             ) as response:
 
-
                 data = await response.json()
 
                 if response.status in (200, 201):
                     await message.answer(
                         "Telegram akkauntingiz muvaffaqiyatli ulandi"
                     )
-                else:
-                    error = data.get('detail', 'No\'malum xatolik')
-                    await message.answer(
-                        f'Akkauntni ulash amalga oshmadi {error}'
+                    return
+
+                if isinstance(data, dict):
+                    error = data.get(
+                        'detail',
+                        data.get('message', "Noma'lum xatolik")
                     )
-    except aiohttp.ClientError:
+                elif isinstance(data, list):
+                    error = '; '.join(str(item) for item in data)
+                else:
+                    error = "Noma'lum xatolik"
+
+                await message.answer(
+                    f"Akkauntni ulash amalga oshmadi: {error}"
+                )
+
+    except (aiohttp.ClientError, TimeoutError, ValueError):
         await message.answer(
-            "Server bilan bog\'liq xatolik ro\'y berdi."
-        )
-    except TimeoutError:
-        await message.answer(
-            "Server javob bermadi. Keyinroq yana urinib ko'ring"
+            "Server bilan bog'liq xatolik ro'y berdi."
         )

@@ -1,8 +1,10 @@
 import secrets
 import hashlib
 from datetime import timedelta
+import aiohttp
 
 from django.utils import timezone
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -14,7 +16,7 @@ from .models import TelegramLinkToken, Notification
 User = get_user_model()
 
 TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME')
-
+TELEGRAM_BOT_SECRET = config('TELEGRAM_BOT_SECRET')
 
 @transaction.atomic
 def create_telegram_link_token(user):
@@ -158,3 +160,77 @@ def build_booking_message(booking):
         )
 
     return message
+
+async def send_notification(notification):
+    telegram_id = notification.recipient.telegram_id
+
+    if not telegram_id:
+        notification.status = Notification.Status.FAILED
+
+        await sync_to_async(notification.save)(
+            update_fields=['status']
+        )
+        return False
+
+    message = build_booking_message(notification.booking)
+
+    payload = {
+        'telegram_id': telegram_id,
+        'message': message
+    }
+
+    headers = {
+        'X-BOT-SECRET': TELEGRAM_BOT_SECRET
+    }
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(
+                'http://127.0.0.1:8080/notifications/send/',
+                headers=headers,
+                json=payload
+            ) as response:
+
+                data = await response.json()
+
+                notification.attempts += 1
+
+                if response.status == 200 and data.get('ok'):
+                    notification.status = Notification.Status.SENT
+                    notification.sent_at = timezone.now()
+
+                    await sync_to_async(notification.save)(
+                        update_fields=[
+                            'status',
+                            'sent_at',
+                            'attempts'
+                        ]
+                    )
+
+                    return True
+
+                notification.status = Notification.Status.FAILED
+
+                await sync_to_async(notification.save)(
+                    update_fields=[
+                        'status',
+                        'attempts'
+                    ]
+                )
+
+                return False
+
+    except (aiohttp.ClientError, TimeoutError, ValueError):
+        notification.status = Notification.Status.FAILED
+        notification.attempts += 1
+
+        await sync_to_async(notification.save)(
+            update_fields=[
+                'status',
+                'attempts'
+            ]
+        )
+
+        return False
